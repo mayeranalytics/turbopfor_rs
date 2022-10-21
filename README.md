@@ -4,7 +4,9 @@ Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFo
 
 [TurboPFor: an analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/)
 
-Compile TurboPFor and copy `libic.a` to `turbopfor_rs/deps`.
+## Caveats
+- The tests don't pass consistently
+- The buffer concept is tricky, it's a multi-purpose unsafe read/write buffer that has to be used carefully
 
 ## Installation
 Create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual.
