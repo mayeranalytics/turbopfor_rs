@@ -6,6 +6,9 @@ Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFo
 
 Compile TurboPFor and copy `libic.a` to `turbopfor_rs/deps`.
 
+## Installation
+Create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual.
+
 ## Function name convention
 
 ```ascii
