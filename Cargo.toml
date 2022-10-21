@@ -1,0 +1,16 @@
+[package]
+name = "turbopfor_rs"
+version = "0.2.0"
+edition = "2021"
+authors = ["MM <mmayer@mayeranalytics.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = "0"
+rand = "0.8"
+generate-random = "0.1"
+
+[[bin]]
+name = "enclen"
+path = "src/enclen.rs"
