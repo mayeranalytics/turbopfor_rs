@@ -9,7 +9,7 @@ Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFo
 - The buffer concept is tricky, it's a multi-purpose unsafe read/write buffer that has to be used carefully
 
 ## Installation
-Create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual.
+Create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual. (Use `--release` for testing if you want speedy execution.)
 
 ## Function name convention
 
