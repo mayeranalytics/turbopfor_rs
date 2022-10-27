@@ -24,6 +24,18 @@ Todo: Automate all this with a [build script](https://doc.rust-lang.org/cargo/re
 
 The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patrick-zippenfenig).
 
+### All steps
+```shell
+mkdir deps/
+git clone https://github.com/powturbo/TurboPFor-Integer-Compression.git 
+patch -u TurboPFor-Integer-Compression/vp4c.c -i TurboPFor-Integer-Compression.patch
+cd TurboPFor-Integer-Compression
+make -j
+cp libic.a ../deps
+cd ..
+cargo test --release
+``` 
+
 ## Function name convention
 
 ```ascii
