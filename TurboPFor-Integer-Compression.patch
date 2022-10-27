@@ -1,0 +1,11 @@
+--- TurboPFor-Integer-Compression/vp4c.c	2022-10-27 09:13:32.520974816 +0200
++++ /home/mmayer/projects/turbopfor_rs/TurboPFor-Integer-Compression/vp4c.c	2022-10-27 08:55:25.585981416 +0200
+@@ -274,7 +274,7 @@
+     #ifdef _P4BITS
+ unsigned TEMPLATE2(_P4BITS, USIZE)(uint_t *__restrict in, unsigned n, unsigned *pbx) {
+       #if HYBRID > 0 && USIZE >= 16
+-  unsigned _vb[USIZE*2+64] = {0}, *vb=&_vb[USIZE];
++  unsigned _vb[USIZE*2+64+16] = {0}, *vb=&_vb[USIZE+16];
+       #endif
+   unsigned cnt[USIZE+8] = {0}, x, bx, bmp8=(n+7)/8;
+   uint_t *ip, u=0, a = in[0];
