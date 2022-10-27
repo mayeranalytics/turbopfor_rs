@@ -2,3 +2,4 @@ deps/
 target/
 __pycache__
 *.lock
+TurboPFor-Integer-Compression/
