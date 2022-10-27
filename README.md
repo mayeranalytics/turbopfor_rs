@@ -5,7 +5,7 @@ Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFo
 [TurboPFor: an analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/)
 
 ## Caveats
-- The tests don't pass consistently
+- The tests pass consistently **if** the Zippenfenig patch is applied
 - The buffer concept is tricky, it's a multi-purpose unsafe read/write buffer that has to be used carefully
 
 ## Installation
