@@ -4,6 +4,7 @@ use std::{
     fs::File,
     io::Read,
 };
+use core::convert::AsRef;
 
 /// Heap memory plus offset pointer.
 /// 
@@ -13,6 +14,12 @@ use std::{
 pub struct Buffer<T> {
     buf: Box<[T]>,
     offset: usize
+}
+
+impl <T> AsRef<[T]> for Buffer<T> {
+    fn as_ref(&self) -> &[T] {
+        self.buf.deref()
+    }
 }
 
 impl<T> Buffer<T>
