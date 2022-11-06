@@ -3,6 +3,7 @@ use std::{
     fmt,
     fs::File,
     io::Read,
+    convert::From,
 };
 use core::convert::AsRef;
 
@@ -11,33 +12,28 @@ use core::convert::AsRef;
 /// The offset keeps track of how far data was written to the Buffer.
 /// Use the unsafe `increment` function to update the offset, and
 /// use the `reset` function to reset the offset to 0.
-pub struct Buffer<T> {
-    buf: Box<[T]>,
+pub struct Buffer<'a, T> {
+    buf: &'a mut [T],
     offset: usize
 }
 
-impl <T> AsRef<[T]> for Buffer<T> {
+/*
+impl <'a, T> AsRef<[T]> for Buffer<'a, T> {
     fn as_ref(&self) -> &[T] {
         self.buf.deref()
     }
 }
+*/
 
-impl<T> Buffer<T>
+impl<'a, T> From<&'a mut Vec<T>> for Buffer<'a, T>
 {
-    /// Constructs a new, empty `Buffer<T>` with at least the specified capacity.
-    pub fn with_capacity(len: usize) -> Self {
-        let mut v = Vec::with_capacity(len);
-        unsafe { v.set_len(len); }
-        Buffer {buf: v.into_boxed_slice(), offset: 0 }
+    fn from(vec: &'a mut Vec<T>) -> Self {
+        Buffer {buf: vec, offset: 0 }
     }
-    /// Constructs a new buffer from Vec
-    pub fn from_vec(vec: Vec<T>) -> Self {
-        Buffer {buf: vec.into_boxed_slice(), offset: 0 }
-    }
-    /// Constructs a new buffer from boxed
-    pub fn from_boxed(boxed: Box<[T]>) -> Self {
-        Buffer {buf: boxed, offset: 0 }
-    }
+}
+
+impl<'a, T> Buffer<'a, T>
+{
     /// Return length of initialised (consumed) `Buffer`
     #[inline]
     pub fn len(&self) -> usize {
@@ -85,7 +81,7 @@ impl<T> Buffer<T>
     }
 }
 
-impl<T> Deref for Buffer<T> {
+impl<'a, T> Deref for Buffer<'a, T> {
     type Target = [T];
 
     #[inline]
@@ -94,14 +90,14 @@ impl<T> Deref for Buffer<T> {
     }
 }
 
-impl<T> DerefMut for Buffer<T> {
+impl<'a, T> DerefMut for Buffer<'a, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target  {
         self.as_mut_slice()
     }
 }
 
-impl<T> fmt::Debug for Buffer<T> where T: fmt::Debug {
+impl<'a, T> fmt::Debug for Buffer<'a, T> where T: fmt::Debug {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.buf)
     }

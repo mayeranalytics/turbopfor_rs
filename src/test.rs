@@ -4,6 +4,7 @@ use generate_random::GenerateRandom;
 use std::fmt::Debug;
 use rand::rngs::ThreadRng;
 use rand::Rng;
+use num::{Zero};
 
 
 const MAX_TEST_LEN: usize = 1024 * 1024;
@@ -26,7 +27,8 @@ fn compare<T: Eq>(data1: &[T], data2: &[T]) -> bool {
 #[test]
 fn basics_test() {
     const LEN: usize = 1024;
-    let mut buf: Buffer<u8> = Buffer::with_capacity(LEN);
+    let mut vec: Vec<u8> = vec![0; LEN];
+    let mut buf: Buffer<u8> = Buffer::from(&mut vec);
     assert_eq!(buf.len(), 0);
     assert_eq!(buf.as_mut_slice().len(), LEN);
 }
@@ -35,18 +37,20 @@ fn basics_test() {
 fn simple_test()
 {
     // make data
-    let mut v: Vec<u16> = Vec::with_capacity(512);
+    let mut v: Vec<u16> = vec![0; 512];
     for val in vec![92, 126, 114, 64, 173, 250, 75, 131, 40, 134, 173, 96, 30, 121, 25, 37, 238, 91, 94, 93, 158, 80, 101, 246, 71, 213, 43, 177, 144, 236, 129].iter() { v.push(*val); }
     
     // encode
-    let mut buf: Buffer<u8> = Buffer::with_capacity(1024);
+    let mut vec: Vec<u8> = vec![0; 1024];
+    let mut buf: Buffer<u8> = Buffer::from(&mut vec);
     let n_bytes_written = Codec::<W>::enc(&v, &mut buf);
 
     // reset buffer
     buf.reset();
 
     // decode
-    let mut output: Buffer<u16> = Buffer::with_capacity(1024);
+    let mut vec: Vec<u16> = vec![0; 1024];
+    let mut output: Buffer<u16> = Buffer::from(&mut vec);
     let n_bytes_read = Codec::<W>::dec(&mut buf, v.len(), &mut output);
 
     // test
@@ -54,16 +58,18 @@ fn simple_test()
     assert!(compare(&v, &output));
 }
 
-fn test_enc<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Debug>() {
+fn test_enc<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Debug + Zero + Copy>() {
     let mut rng = rand::thread_rng();
     let enc_size: usize = W::buf_size::<T>(MAX_TEST_LEN);
     let dec_size: usize = MAX_TEST_LEN+32;
-    let mut encoded: Buffer<u8> = Buffer::with_capacity(enc_size);
-    let mut decoded: Buffer<T> = Buffer::with_capacity(dec_size);
+    let mut vec_e: Vec<u8> = vec![0; enc_size];
+    let mut encoded: Buffer<u8> = Buffer::from(&mut vec_e);
+    let mut vec_d: Vec<T> = vec![T::zero(); dec_size];
+    let mut decoded: Buffer<T> = Buffer::from(&mut vec_d);
     for _ in 0..N_ITERATIONS {
         // make data
         let len = rng.gen_range(1..MAX_TEST_LEN);   // length of randomly generated data
-        let mut input: Vec<T> = Vec::with_capacity(len+32+1_000_000);
+        let mut input: Vec<T> = vec![T::zero(); len+32+1_000_000];
         for _ in 0..len {
             input.push(T::generate_random(&mut rng))
         }
@@ -123,7 +129,7 @@ trait Num where Self: Sized {
 
 impl Num for u16 {
     fn mk_data(len: usize, rng: &mut ThreadRng, positive:bool) -> Vec<u16> {
-        let mut input: Vec<u16> = Vec::with_capacity(len+32);
+        let mut input: Vec<u16> = vec![0; len+32];
         let mut x = 0;
         for _ in 0..len {
             x += rng.gen_range((if positive {1} else {0})..32);
@@ -135,7 +141,7 @@ impl Num for u16 {
 
 impl Num for u32 {
     fn mk_data(len: usize, rng: &mut ThreadRng, positive:bool) -> Vec<u32> {
-        let mut input: Vec<u32> = Vec::with_capacity(len+32);
+        let mut input: Vec<u32> = vec![0; len+32];
         let mut x = 0;
         for _ in 0..len {
             x += rng.gen_range((if positive {1} else {0})..256);
@@ -147,7 +153,7 @@ impl Num for u32 {
 
 impl Num for u64 {
     fn mk_data(len: usize, rng: &mut ThreadRng, positive:bool) -> Vec<u64> {
-        let mut input: Vec<u64> = Vec::with_capacity(len+32);
+        let mut input: Vec<u64> = vec![0; len+32];
         let mut x = 0;
         for _ in 0..len {
             x += rng.gen_range((if positive {1} else {0})..256*256);
@@ -157,15 +163,17 @@ impl Num for u64 {
     }
 }
 
-fn test_generic<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Num>(
+fn test_generic<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Zero + Clone + Num>(
     max_test_len: usize,
     enc: fn(&Vec<T>, &mut Buffer<u8>) -> usize,
     dec: fn(&mut Buffer<u8>, usize, &mut Buffer<T>) -> usize
 ) 
 {
     let mut rng = rand::thread_rng();
-    let mut encoded: Buffer<u8> = Buffer::with_capacity(W::buf_size::<T>(max_test_len));
-    let mut decoded: Buffer<T> = Buffer::with_capacity(max_test_len+32);
+    let mut vec_e: Vec<u8> = vec![0; W::buf_size::<T>(max_test_len)];
+    let mut encoded: Buffer<u8> = Buffer::from(&mut vec_e);
+    let mut vec_d: Vec<T> = vec![T::zero(); W::buf_size::<T>(max_test_len+32)];
+    let mut decoded: Buffer<T> = Buffer::from(&mut vec_d);
     for _ in 0..32 {
         let len = rng.gen_range(1..max_test_len);
         let input: Vec<T> = T::mk_data(len, &mut rng, false);
