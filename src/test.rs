@@ -1,5 +1,4 @@
 use super::codec::*;
-use super::buffer::*;
 use generate_random::GenerateRandom;
 use std::fmt::Debug;
 use rand::rngs::ThreadRng;
@@ -25,79 +24,75 @@ fn compare<T: Eq>(data1: &[T], data2: &[T]) -> bool {
 }
 
 #[test]
-fn basics_test() {
-    const LEN: usize = 1024;
-    let mut vec: Vec<u8> = vec![0; LEN];
-    let mut buf: Buffer<u8> = Buffer::from(&mut vec);
-    assert_eq!(buf.len(), 0);
-    assert_eq!(buf.as_mut_slice().len(), LEN);
-}
-
-#[test]
 fn simple_test()
 {
     // make data
-    let mut v: Vec<u16> = vec![0; 512];
-    for val in vec![92, 126, 114, 64, 173, 250, 75, 131, 40, 134, 173, 96, 30, 121, 25, 37, 238, 91, 94, 93, 158, 80, 101, 246, 71, 213, 43, 177, 144, 236, 129].iter() { v.push(*val); }
+    let v: Vec<u16> = vec![92, 126, 114, 64, 173, 250, 75, 131, 40, 134, 173, 96, 30, 121, 25, 37, 238, 91, 94, 93, 158, 80, 101, 246, 71, 213, 43, 177, 144, 236, 129];
     
     // encode
-    let mut vec: Vec<u8> = vec![0; 1024];
-    let mut buf: Buffer<u8> = Buffer::from(&mut vec);
+    let mut buf: Vec<u8> = vec![0; 1024];
     let n_bytes_written = Codec::<W>::enc(&v, &mut buf);
 
-    // reset buffer
-    buf.reset();
-
     // decode
-    let mut vec: Vec<u16> = vec![0; 1024];
-    let mut output: Buffer<u16> = Buffer::from(&mut vec);
-    let n_bytes_read = Codec::<W>::dec(&mut buf, v.len(), &mut output);
+    let mut output: Vec<u16> = vec![0; 1024];
+    let n_bytes_read = Codec::<W>::dec(&buf, v.len(), &mut output);
 
     // test
     assert_eq!(n_bytes_written, n_bytes_read);
-    assert!(compare(&v, &output));
+    assert!(compare(&v, &output[..v.len()]));
 }
 
-fn test_enc<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Debug + Zero + Copy>() {
+/// Checks if data was written beyond `len`. returns true if ok
+fn check_no_overflow(data: &[u8], len: usize) -> bool {
+    let mut i = data.len();
+    while i > 0 {
+        i -= 1;
+        if data[i] != 0 { break; }
+    }
+    if i > len {
+        println!("empty data starts at {}, {} after len (={})", i, i-len+1, len);
+        let m = std::cmp::min(len+128, data.len());
+        println!("{:?}", &data[len..m]);
+        false
+    } else {
+        true
+    }
+}
+
+fn test_enc<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Debug + Zero + Copy>() 
+{
     let mut rng = rand::thread_rng();
+
+    // alloc
     let enc_size: usize = W::buf_size::<T>(MAX_TEST_LEN);
     let dec_size: usize = MAX_TEST_LEN+32;
-    let mut vec_e: Vec<u8> = vec![0; enc_size];
-    let mut encoded: Buffer<u8> = Buffer::from(&mut vec_e);
-    let mut vec_d: Vec<T> = vec![T::zero(); dec_size];
-    let mut decoded: Buffer<T> = Buffer::from(&mut vec_d);
+    let mut encoded: Vec<u8> = vec![0; enc_size];
+    let mut decoded: Vec<T> = vec![T::zero(); dec_size];
+
+    // repeat test
     for _ in 0..N_ITERATIONS {
         // make data
         let len = rng.gen_range(1..MAX_TEST_LEN);   // length of randomly generated data
-        let mut input: Vec<T> = vec![T::zero(); len+32+1_000_000];
-        for _ in 0..len {
-            input.push(T::generate_random(&mut rng))
-        }
+        let mut input: Vec<T> = Vec::with_capacity(MAX_TEST_LEN);
+        for _ in 0..len                  { input.push(T::generate_random(&mut rng)); }
+        while input.len() < MAX_TEST_LEN { input.push(T::zero()); }
         // encode
         let n_bytes_written = T::enc(
             &input, 
             &mut encoded
         );
-        assert_eq!(n_bytes_written, encoded.len());
-        // reset buffer
-        encoded.reset();
-        assert_eq!(encoded.len(), 0);
-        assert_eq!(input.len(), len);
+        assert!(check_no_overflow(&encoded, n_bytes_written));
         // decode
         let n_bytes_read = T::dec(
             &mut encoded,
             input.len(),
             &mut decoded
         );
-        assert_eq!(n_bytes_read, encoded.len());
         assert_eq!(n_bytes_written, n_bytes_read);
-        assert_eq!(len, decoded.len());
-        assert!(compare(&input, &decoded));
-        // Don't forget to truncate at iteration
-        encoded.reset();
-        assert!(encoded.len()==0);
-        decoded.reset();
-        assert!(decoded.len()==0);
+        assert!(compare(&input, &decoded[..input.len()]));
+
+        // Clean up
+        for i in 0..encoded.len() { encoded[i] = 0; }
     }
 }
 
@@ -165,15 +160,13 @@ impl Num for u64 {
 
 fn test_generic<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Zero + Clone + Num>(
     max_test_len: usize,
-    enc: fn(&Vec<T>, &mut Buffer<u8>) -> usize,
-    dec: fn(&mut Buffer<u8>, usize, &mut Buffer<T>) -> usize
+    enc: fn(&[T], &mut [u8]) -> usize,
+    dec: fn(&[u8], usize, &mut [T]) -> usize
 ) 
 {
     let mut rng = rand::thread_rng();
-    let mut vec_e: Vec<u8> = vec![0; W::buf_size::<T>(max_test_len)];
-    let mut encoded: Buffer<u8> = Buffer::from(&mut vec_e);
-    let mut vec_d: Vec<T> = vec![T::zero(); W::buf_size::<T>(max_test_len+32)];
-    let mut decoded: Buffer<T> = Buffer::from(&mut vec_d);
+    let mut encoded: Vec<u8> = vec![0; W::buf_size::<T>(max_test_len)];
+    let mut decoded: Vec<T> = vec![T::zero(); W::buf_size::<T>(max_test_len+32)];
     for _ in 0..32 {
         let len = rng.gen_range(1..max_test_len);
         let input: Vec<T> = T::mk_data(len, &mut rng, false);
@@ -181,7 +174,6 @@ fn test_generic<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Zero + Clone + N
             &input,
             &mut encoded
         );
-        encoded.reset();
         let bytes_used = dec(
             &mut encoded,
             input.len(),
@@ -189,8 +181,6 @@ fn test_generic<W:Width<W>, T: GenerateRandom + Eq + Codec<W> + Zero + Clone + N
         );
         assert_eq!(enc_size, bytes_used);
         assert!(compare(&input, &decoded[..input.len()]));
-        encoded.reset();
-        decoded.reset();
     }
 }
 

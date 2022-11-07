@@ -1,11 +1,10 @@
+/// Small exe for debugging/determining correct enclen
 use generate_random::GenerateRandom;
 use turbopfor_rs::codec::*;
-use turbopfor_rs::buffer::*;
 
 fn enc_len<W:Width<W>, T: GenerateRandom + Eq + Codec<W>>(len: usize, n_iter: usize) -> usize {
     let mut rng = rand::thread_rng();
-    let mut vec: Vec<u8> = Vec::with_capacity(500_000_000);
-    let mut encoded: Buffer<u8> = Buffer::from(&mut vec);
+    let mut encoded: Vec<u8> = vec![0; 500_000_000];
     let mut max_enc_size: usize = 0;
     for _ in 0..n_iter {
         let mut input: Vec<T> = Vec::with_capacity(len+32);
