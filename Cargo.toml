@@ -10,8 +10,6 @@ authors = ["MM <mmayer@mayeranalytics.com>"]
 libc = "0"
 rand = "0.8"
 generate-random = "0.1"
-num = "0.4"
-memmap2 = "0.5"
 
 [[bin]]
 name = "enclen"
