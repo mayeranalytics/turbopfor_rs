@@ -131,7 +131,7 @@ fn check_no_overflow<T: Ord+Debug+Num>(data: &[T], len: usize) -> bool {
     }
 }
 
-fn test_generic<W:Width<W>, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
+fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     max_test_len: usize,
     enc: fn(&[T], &mut [u8]) -> usize,
     dec: fn(&[u8], usize, &mut [T]) -> usize,
