@@ -16,6 +16,11 @@ Use at your own risk!
 - The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy.
 - The tests pass consistently **if** the Zippenfenig patch is applied
 - Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may read/write beyond allocated memory resulting in segfaults of other problems
+- Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
+
+## Acknowledgements
+
+The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patrick-zippenfenig).
 
 ## Installation
 Clone the [TurboPFor](https://github.com/powturbo/TurboPFor-Integer-Compression) repo.
@@ -28,10 +33,6 @@ patch -u TurboPFor-Integer-Compression/vp4c.c -i TurboPFor-Integer-Compression.p
 After compilation create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual. (Use `--release` for testing if you want speedy execution.)
 
 Todo: Automate all this with a [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html).
-
-### Acknowledgements
-
-The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patrick-zippenfenig).
 
 ### All steps
 ```shell
