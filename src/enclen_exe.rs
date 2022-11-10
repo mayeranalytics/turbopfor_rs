@@ -2,7 +2,7 @@
 use generate_random::GenerateRandom;
 use turbopfor_rs::codec::*;
 
-fn enc_len<W:Width<W>, T: GenerateRandom + Eq + Codec<W>>(len: usize, n_iter: usize) -> usize {
+fn enc_len<W:Width, T: GenerateRandom + Eq + Codec<W>>(len: usize, n_iter: usize) -> usize {
     let mut rng = rand::thread_rng();
     let mut encoded: Vec<u8> = vec![0; 500_000_000];
     let mut max_enc_size: usize = 0;

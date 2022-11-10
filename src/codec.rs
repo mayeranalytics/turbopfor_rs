@@ -1,14 +1,14 @@
 use std::mem::size_of;
 use super::p4::*;
 
-pub trait Width<W> {
-    /// Maximum [u8] size required for encoding
+pub trait Width {
+    /// Maximum [u8] size required for encoding `n` T's
     fn buf_size<T>(n:usize)  -> usize;
 }
 
 /// Default width
 pub struct W;
-impl Width<W> for W {
+impl Width for W {
     fn buf_size<T>(n:usize)  -> usize {
         (n+127)/128 + (n+32)*size_of::<T>()
     }
@@ -16,7 +16,7 @@ impl Width<W> for W {
 
 /// Width 128v
 pub struct W128v;
-impl Width<W128v> for W128v {
+impl Width for W128v {
     fn buf_size<T>(n:usize)  -> usize {
         (n+127)/128 + (n+32)*size_of::<T>()
     }
@@ -24,13 +24,13 @@ impl Width<W128v> for W128v {
 
 /// Width 256
 pub struct W256v;
-impl Width<W256v> for W256v {
+impl Width for W256v {
     fn buf_size<T>(n:usize)  -> usize {
         (n+255)/256 + (n+32)*size_of::<T>()
     }
 }
 
-pub trait Codec<W:Width<W>> where Self:Sized {
+pub trait Codec<W:Width> where Self:Sized {
     /// Turbopfor encoding for unsorted integer lists of type `T`
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
