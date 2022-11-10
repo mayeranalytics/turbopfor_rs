@@ -23,26 +23,11 @@ Use at your own risk!
 The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patrick-zippenfenig).
 
 ## Installation
-Clone the [TurboPFor](https://github.com/powturbo/TurboPFor-Integer-Compression) repo.
 
-Then apply the patch
-```shell
-patch -u TurboPFor-Integer-Compression/vp4c.c -i TurboPFor-Integer-Compression.patch
+Cargo should automaticall download, patch and build the turbopfor library.
+
 ```
-
-After compilation create a directory `deps/` and place the compiled turbopfor library `libic.a` into it. Then use `cargo build` and `cargo test` as usual. (Use `--release` for testing if you want speedy execution.)
-
-Todo: Automate all this with a [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html).
-
-### All steps
-```shell
-mkdir deps/
-git clone https://github.com/powturbo/TurboPFor-Integer-Compression.git 
-patch -u TurboPFor-Integer-Compression/vp4c.c -i TurboPFor-Integer-Compression.patch
-cd TurboPFor-Integer-Compression
-make -j
-cp libic.a ../deps
-cd ..
+cargo build
 cargo test --release
 ``` 
 
