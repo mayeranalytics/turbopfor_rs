@@ -1,15 +1,21 @@
+![GitHub](https://img.shields.io/github/license/mayeranalytics/turbopfor_rs)
+![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/mayeranalytics/turbopfor_rs?include_prereleases)
+![CI](https://github.com/mayeranalytics/turbopfor_rs/actions/workflows/ci.yml/badge.svg)
+
 # turbopfor\_rs
 
-![CI](https://github.com/mayeranalytics/turbopfor_rs/actions/workflows/ci.yml/badge.svg)
-![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/mayeranalytics/turbopfor_rs?include_prereleases)
+This is a wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression).
+The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks.
+(In general, the use of superlatives in TorboPFor's readme is rather irritating.)
 
-Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression)
+[Michael Stapelberg](https://github.com/stapelberg/) performed an independent analysis: [TurboPFor: An analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/).
 
-[TurboPFor: an analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/)
+Use at your own risk!
 
 ## Caveats
+- The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy.
 - The tests pass consistently **if** the Zippenfenig patch is applied
-- The buffer concept is tricky, it's a multi-purpose unsafe read/write buffer that has to be used carefully
+- Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may read/write beyond allocated memory resulting in segfaults of other problems
 
 ## Installation
 Clone the [TurboPFor](https://github.com/powturbo/TurboPFor-Integer-Compression) repo.
