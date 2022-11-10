@@ -1,6 +1,8 @@
---- TurboPFor-Integer-Compression/vp4c.c	2022-10-27 09:13:32.520974816 +0200
-+++ /home/mmayer/projects/turbopfor_rs/TurboPFor-Integer-Compression/vp4c.c	2022-10-27 08:55:25.585981416 +0200
-@@ -274,7 +274,7 @@
+diff --git a/vp4c.c b/vp4c.c
+index f9237f2..a05fadb 100644
+--- a/vp4c.c
++++ b/vp4c.c
+@@ -274,7 +274,7 @@ size_t p4nsdec64(unsigned char *in, size_t n, uint64_t *out) { uint64_t  *op,sta
      #ifdef _P4BITS
  unsigned TEMPLATE2(_P4BITS, USIZE)(uint_t *__restrict in, unsigned n, unsigned *pbx) {
        #if HYBRID > 0 && USIZE >= 16
