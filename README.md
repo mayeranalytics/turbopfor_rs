@@ -1,5 +1,8 @@
 # turbopfor\_rs
 
+![CI](https://github.com/mayeranalytics/turbopfor_rs/actions/workflows/ci.yml/badge.svg)
+![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/mayeranalytics/turbopfor_rs?include_prereleases)
+
 Wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression)
 
 [TurboPFor: an analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/)
