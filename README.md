@@ -26,10 +26,49 @@ The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patric
 
 Cargo should automaticall download, patch and build the turbopfor library.
 
-```
+```sh
 cargo build
 cargo test --release
-``` 
+```
+
+## Usage
+
+The functions `enc`, `dec`, `denc`, `ddec`, etc. have different variants depending on the register width that is used.
+
+The phantom types associated with these widths are found in `turbopfor_rs::codec`:
+
+- `W` 
+- `W128v`
+- `W256`
+
+Each width implements the he [turbopfor_rs::codec::Width](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L4) trait.
+`Width` has a function [set_buf](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L6) that returns the necessary output buffer size (in bytes) for a given input length.
+
+For each width the [Codec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L33) trait provides the [enc](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L40), [dec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L49), etc., encoder/decoder pairs.
+
+Example:
+
+```Rust
+use turbopfor_rs::codec::{W, Codec, Width};
+
+fn main() {
+    let input = vec![0,1,2,3,4,5,9,7,8,999999u32];
+    println!("input: {:?}", &input);
+    
+    /// allocate output buffer
+    let buflen: usize = W::buf_size::<u32>(input.len());
+    let mut output = vec![0u8; buflen];
+    
+    // encode
+    let l = Codec::<W>::enc(&input, &mut output);
+    
+    println!("encoded: {:?}", &output[..l]);
+}
+```
+
+You can also use the basic wrappers in [turbopfor_rs::p4](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/lib.rs#L5), for example, directly.
+
+Decoding works similarly.
 
 ## Function name convention
 
