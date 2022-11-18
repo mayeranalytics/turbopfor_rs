@@ -13,9 +13,13 @@ Please consider carefully the following
 
 #### Caveats
 
-- **Quality:** The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy. Note however that the tests pass consistently ***if*** the Zippenfenig patch is applied (tested on x86 Linux and MacOS).
+- **Quality:** The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy. Note however that the tests pass consistently ***if*** the Zippenfenig patch is applied. 
 - **Critical buffer sizes:** Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may write beyond allocated memory resulting in segfaults. Likewise, when decoding, the input slice must be large enough to support decoding of the required number of integers, otherwise you get segfaults again.
 - **License:** Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
+
+Because of these caveats we probably won't publish this crate on [crates.io](https://crates.io). Feedback regarding successes or failures with this library is very welcome!
+
+Tests were performed on Intel Intel Core i7 running Linux and MacOS.
 
 ## Acknowledgements
 
@@ -65,6 +69,12 @@ fn main() {
 }
 ```
 
+Add this line to `Cargo.toml`:
+
+```toml
+turbopfor_rs = { git="https://github.com/mayeranalytics/turbopfor_rs", version="0.3.2" }
+```
+
 You can also use the basic wrappers in [turbopfor_rs::p4](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/lib.rs#L5) directly.
 
 Decoding works the same way, but note that you have to provide the number `n` of output integers you wish to decode:
@@ -74,8 +84,6 @@ fn dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 ```
 
 You must ensure that the input is long enough to support decoding of `n` integers. If the input buffer is too short you will get segfaults!
-
-
 
 # Notes
 
