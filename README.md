@@ -5,28 +5,27 @@
 # turbopfor\_rs
 
 This is a wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression).
-The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks.
-(In general, the use of superlatives in TorboPFor's readme is rather irritating.)
+The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks. (Prepare for an abundance of superlatives in TorboPFor's readme...)
 
 [Michael Stapelberg](https://github.com/stapelberg/) performed an independent analysis: [TurboPFor: An analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/).
 
-Use at your own risk!
+Please consider carefully the following
 
-## Caveats
-- The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy.
-- The tests pass consistently **if** the Zippenfenig patch is applied
-- Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may read/write beyond allocated memory resulting in segfaults of other problems
-- Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
+#### Caveats
+
+- **Quality:** The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy. Note however that the tests pass consistently ***if*** the Zippenfenig patch is applied (tested on x86 Linux and MacOS).
+- **Critical buffer sizes:** Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may write beyond allocated memory resulting in segfaults. Likewise, when decoding, the input slice must be large enough to support decoding of the required number of integers, otherwise you get segfaults again.
+- **License:** Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
 
 ## Acknowledgements
 
-The bug in `vp4c.c` was found by [Patrick Zippenfenig](https://github.com/patrick-zippenfenig).
+A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) for sharing the the bugfix in [vp4c.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/90867ca1169b7af93d908ebefdb28f24cdce79da/vp4c.c). See [patch.diff](https://github.com/mayeranalytics/turbopfor_rs/blob/1aaf80a6bdcbdd81b0d7375e3fe451124d2c3d25/patch.diff#L1).
 
 ## Installation
 
 Cargo should automaticall download, patch and build the turbopfor library.
 
-```sh
+```shell
 cargo build
 cargo test --release
 ```
@@ -41,36 +40,50 @@ The phantom types associated with these widths are found in `turbopfor_rs::codec
 - `W128v`
 - `W256`
 
-Each width implements the he [turbopfor_rs::codec::Width](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L4) trait.
-`Width` has a function [buf_size](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L6) that returns the necessary output buffer size (in bytes) for a given input length.
+Each width implements the [turbopfor_rs::codec::Width](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L4) trait.
+`Width` has a function [buf_size](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L6) that returns the necessary output buffer size (in bytes) for a given input length. If the output buffer is too small you will get segfaults!
 
 For each width the [Codec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L33) trait provides the [enc](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L40), [dec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L49), etc., encoder/decoder pairs.
 
 Example:
 
-```Rust
+```rust
 use turbopfor_rs::codec::{W, Codec, Width};
 
 fn main() {
     let input = vec![0,1,2,3,4,5,9,7,8,999999u32];
     println!("input: {:?}", &input);
-    
+
     /// allocate output buffer
     let buflen: usize = W::buf_size::<u32>(input.len());
     let mut output = vec![0u8; buflen];
-    
+
     // encode
     let l = Codec::<W>::enc(&input, &mut output);
-    
+
     println!("encoded: {:?}", &output[..l]);
 }
 ```
 
-You can also use the basic wrappers in [turbopfor_rs::p4](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/lib.rs#L5), for example, directly.
+You can also use the basic wrappers in [turbopfor_rs::p4](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/lib.rs#L5) directly.
 
-Decoding works similarly.
+Decoding works the same way, but note that you have to provide the number `n` of output integers you wish to decode:
+
+```rust
+fn dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
+```
+
+You must ensure that the input is long enough to support decoding of `n` integers. If the input buffer is too short you will get segfaults!
+
+
+
+# Notes
+
+Some notes on the original [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library that were collected while writing the wrapper.
 
 ## Function name convention
+
+The  library uses a compact naming scheme for its enc/dec/pack/unpack functions:
 
 ```ascii
 {vb | p4 | bit | vs}[n][d | d1 | f | fm | z ]{enc/dec | pack/unpack}[| 128V | 256V][8 | 16 | 32 | 64]:
@@ -98,7 +111,9 @@ Decoding works similarly.
 | 'dec' or 'unpack' | decode or bitunpack       |
 | 'NN'              | integer size (8/16/32/64) |
 
-# Available Functions
+## Available Functions
+
+The following width combinations are available:
 
 | enc/dec | 8   | 16  | 32  | 64  |
 | ------- |:---:|:---:|:---:|:---:|
@@ -112,7 +127,9 @@ Exceptions:
 
 - in addition to enc/dec256v there is a 'w' version enc/dec256w
 
-# Alignment, input and buffer sizes
+## Alignment, input and buffer sizes
+
+Information about buffer sizes is scattered all over the place:
 
 - [Alignment and padding, Issue #59]([Alignment and tailing padding requirements for the decoder APIs · Issue #59 · powturbo/TurboPFor-Integer-Compression · GitHub](https://github.com/powturbo/TurboPFor-Integer-Compression/issues/59):
   
