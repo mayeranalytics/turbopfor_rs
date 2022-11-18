@@ -42,7 +42,7 @@ The phantom types associated with these widths are found in `turbopfor_rs::codec
 - `W256`
 
 Each width implements the he [turbopfor_rs::codec::Width](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L4) trait.
-`Width` has a function [set_buf](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L6) that returns the necessary output buffer size (in bytes) for a given input length.
+`Width` has a function [buf_size](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L6) that returns the necessary output buffer size (in bytes) for a given input length.
 
 For each width the [Codec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L33) trait provides the [enc](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L40), [dec](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/codec.rs#L49), etc., encoder/decoder pairs.
 
