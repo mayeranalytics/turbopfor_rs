@@ -157,8 +157,8 @@ fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     let mut rng = rand::thread_rng();
 
     // alloc
-    let enc_size: usize = W::buf_size::<T>(max_test_len);
-    let dec_size: usize = max_test_len+32;
+    let enc_size: usize = W::enc_buf_size::<T>(max_test_len);
+    let dec_size: usize = W::dec_buf_len::<T>(max_test_len);
     let mut encoded: Vec<u8> = vec![0; enc_size];
     let mut decoded: Vec<T> = vec![T::zero(); dec_size];
 
@@ -191,8 +191,8 @@ fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     // test with tight allocations
     for _ in 0..N_ITERATIONS/8 {
         let len = rng.gen_range(1..max_test_len);   // length of randomly generated input data
-        let enc_size: usize = W::buf_size::<T>(len);
-        let dec_size: usize = len+32;
+        let enc_size: usize = W::enc_buf_size::<T>(len);
+        let dec_size: usize = W::dec_buf_len::<T>(len);
         let mut encoded: Vec<u8> = vec![0; enc_size];
         let mut decoded: Vec<T> = vec![T::zero(); dec_size];
         // make data

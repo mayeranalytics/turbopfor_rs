@@ -2,32 +2,37 @@ use std::mem::size_of;
 use super::p4::*;
 
 pub trait Width {
-    /// Maximum [u8] size required for encoding `n` T's
-    fn buf_size<T>(n:usize)  -> usize;
+    /// Minimum safe [u8] size required for encoding `n` T's
+    fn enc_buf_size<T>(n:usize) -> usize;
+    /// Minimum safe [T] size required for decoding `n` T's
+    fn dec_buf_len<T>(n:usize)  -> usize;
 }
 
 /// Default width
 pub struct W;
 impl Width for W {
-    fn buf_size<T>(n:usize)  -> usize {
+    fn enc_buf_size<T>(n:usize) -> usize {
         (n+127)/128 + (n+32)*size_of::<T>()
     }
+    fn dec_buf_len<T>(n:usize) -> usize { n+32 }
 }
 
 /// Width 128v
 pub struct W128v;
 impl Width for W128v {
-    fn buf_size<T>(n:usize)  -> usize {
+    fn enc_buf_size<T>(n:usize) -> usize {
         (n+127)/128 + (n+32)*size_of::<T>()
     }
+    fn dec_buf_len<T>(n:usize) -> usize { n+32 }
 }
 
 /// Width 256
 pub struct W256v;
 impl Width for W256v {
-    fn buf_size<T>(n:usize)  -> usize {
+    fn enc_buf_size<T>(n:usize) -> usize {
         (n+255)/256 + (n+32)*size_of::<T>()
     }
+    fn dec_buf_len<T>(n:usize) -> usize { n+32 }
 }
 
 pub trait Codec<W:Width> where Self:Sized {
