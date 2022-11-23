@@ -82,7 +82,7 @@ impl Num for u64 {
 }
 
 /// Make increasing data of maximum length `max_len`. If `strictly` is true, make strictly increasing data.
-fn mk_data_inc<T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord>(
+fn mk_data_inc<T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord>(
     max_len: usize,
     rng: &mut ThreadRng,
     data_type: &DataType
@@ -114,15 +114,22 @@ fn mk_data_inc<T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord>(
 }
 
 
-/// Checks if data was written beyond `len`. returns true if ok
-fn check_no_overflow<T: Ord+Debug+Num>(data: &[T], len: usize) -> bool {
+/// Checks that no data was written beyond `len`, i.e. checks that 
+/// all values data[len], data[len+1], ... are zero
+/// 
+/// # Returns
+/// true if ok
+fn check_no_overflow<T: Ord+Debug+Num>(data: &[T], len: usize) -> bool
+{
+    if len == 0 { return true; } // silly case
     let mut i = data.len();
     while i > 0 {
         i -= 1;
         if data[i] != T::zero() { break; }
     }
-    if i > len {
-        println!("empty data starts at {}, {} after len (={})", i, i-len+1, len);
+    // i is the index of the last non-zero value in data
+    if i > len-1 {
+        println!("empty data starts at index {}, should start at index {}, that is {}", i, len-1, i-len+1);
         let m = std::cmp::min(len+128, data.len());
         println!("{:?}", &data[len..m]);
         false
@@ -131,7 +138,18 @@ fn check_no_overflow<T: Ord+Debug+Num>(data: &[T], len: usize) -> bool {
     }
 }
 
-fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
+#[test]
+fn test_check_no_overflow()
+{
+    let input = [1u32, 2, 0, 0];
+    assert!(check_no_overflow(&input, 1)==false);
+    assert!(check_no_overflow(&input, 2)==false);
+    assert!(check_no_overflow(&input, 3)==true);
+    assert!(check_no_overflow(&input, 4)==true);
+    assert!(check_no_overflow(&input, 5)==true);
+}
+
+fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     max_test_len: usize,
     enc: fn(&[T], &mut [u8]) -> usize,
     dec: fn(&[u8], usize, &mut [T]) -> usize,
