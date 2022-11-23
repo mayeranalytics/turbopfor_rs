@@ -189,14 +189,14 @@ fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     }
 
     // test with tight allocations
-    for _ in 0..N_ITERATIONS/8 {
+    for _ in 0..N_ITERATIONS/4 {
         let len = rng.gen_range(1..max_test_len);   // length of randomly generated input data
         let enc_size: usize = W::enc_buf_size::<T>(len);
         let dec_size: usize = W::dec_buf_len::<T>(len);
         let mut encoded: Vec<u8> = vec![0; enc_size];
         let mut decoded: Vec<T> = vec![T::zero(); dec_size];
         // make data
-        let mut input: Vec<T> = mk_data_inc(len, &mut rng, &data_type);
+        let mut input: Vec<T> = mk_data_inc(len, &mut rng, &data_type); // the input vector size is tight!
         while input.len() < len { input.push(T::zero()); }
         // encode
         let n_bytes_written = enc(
@@ -204,9 +204,12 @@ fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
             &mut encoded
         );
         assert!(check_no_overflow(&encoded, n_bytes_written));
-        // decode
+        // decode: make a copy of the encoded buffer with tight size
+        let mut encoded_copy: Vec<u8> = Vec::new();
+        encoded_copy.extend_from_slice(&encoded[0..n_bytes_written]);
+        assert_eq!(n_bytes_written, encoded_copy.capacity());
         let n_bytes_read = dec(
-            &mut encoded,
+            &encoded_copy,
             input.len(),
             &mut decoded
         );
