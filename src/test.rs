@@ -30,7 +30,7 @@ fn simple_test()
 {
     // make data
     let v: Vec<u16> = vec![92, 126, 114, 64, 173, 250, 75, 131, 40, 134, 173, 96, 30, 121, 25, 37, 238, 91, 94, 93, 158, 80, 101, 246, 71, 213, 43, 177, 144, 236, 129];
-    
+
     // encode
     let mut buf: Vec<u8> = vec![0; 1024];
     let n_bytes_written = Codec::<W>::enc(&v, &mut buf);
@@ -82,7 +82,7 @@ impl Num for u64 {
 }
 
 /// Make increasing data of maximum length `max_len`. If `strictly` is true, make strictly increasing data.
-fn mk_data_inc<T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord>(
+fn mk_data_inc<T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord>(
     max_len: usize,
     rng: &mut ThreadRng,
     data_type: &DataType
@@ -147,7 +147,7 @@ fn test_check_no_overflow()
     assert!(check_no_overflow(&input, 6)==true);
 }
 
-fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
+fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     max_test_len: usize,
     enc: fn(&[T], &mut [u8]) -> usize,
     dec: fn(&[u8], usize, &mut [T]) -> usize,
@@ -187,7 +187,7 @@ fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
         for i in 0..encoded.len() { encoded[i] = 0; }
         for i in 0..decoded.len() { decoded[i] = T::zero(); }
     }
-    
+
     // test with tight allocations
     for _ in 0..N_ITERATIONS/8 {
         let len = rng.gen_range(1..max_test_len);   // length of randomly generated input data
