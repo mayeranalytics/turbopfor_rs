@@ -215,7 +215,7 @@ fn test_generic<W:Width, T: Num+Copy+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
         );
         assert_eq!(n_bytes_written, n_bytes_read);
         assert!(compare(&input, &decoded[..input.len()]));
-        assert!(check_no_overflow(&decoded, len));
+        assert!(check_no_overflow(&decoded, dec_size));
         // Reset buffers
         for i in 0..encoded.len() { encoded[i] = 0; }
         for i in 0..decoded.len() { decoded[i] = T::zero(); }
