@@ -86,25 +86,47 @@ fn dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 
 #### Buffer sizes!
 
-You must ensure that the input is long enough to support decoding of `n` integers. If the input or output buffer is too short you will get segfaults!
+Turbopfor does not perform any bounds checks and will read/write as far as it has to. This aspect is not documented and the statements in the Issues are ambiguous.
 
-To determine the minimum safe buffer allocations you can use the two functions
+- Encoding:
+  
+  - Allocate enough write buffer using `W::enc_buf_size<T>::(n)`
+  
+  - To the best of our knowledge Turbopfor will not read beyond the bounds of the input array
 
-- `W::enc_buf_size::<T>(n)`
+- Decoding
+  
+  - Allocate 32 extra integers, or use  `W::dec_buf_len::<T>(n)`
+  
+  - To the best of our knowledge Turbopfor will not read beyond the bounds of the input
 
-- `W::dec_buf_len::<T>(n)`
+You must ensure that the outputs is are long enough, otherwise you will get segfaults!
 
-We are adhering to the naming convention that "size" refers to a number of *bytes*, whereas "len" refers to a number of *items* in an array of any type T.
+(Note: We are adhering to the naming convention that "size" refers to a number of *bytes*, whereas "len" refers to a number of *items* in an array of any type T.)
 
-For example, this here not safe, the output buffer is too short:
+To illustrate the point, encode the array `[0,1,2,3]` and then decode it:
 
 ```rust
-let input = vec![1u32];
-let mut buf = [0u8; 64]; // large enough
-let enc_size = Codec::<W>::enc(&input, &mut buf);
-let mut output = vec![0u32]; // ! BAD. Output buffer too short!
-let dec_size = Codec::<W>::dec(&buf, 1, &mut output);    
+let input = vec![0u32, 1, 2, 3];                // encode this
+let mut output = vec![0u32; input.len()+32];    // decode into this
+let mut buf = vec![0u8; 1024];                  // generous buffer
+// encode
+let size_enc = Codec::<W>::enc(&input, &mut buf);
+// decode
+let size_dec = Codec::<W>::dec(&mut buf, input.len(), &mut output);
+assert_eq!(size_enc, size_dec);
+println!("{:?}", output);
 ```
+
+The `output` `Vec<u32>` is
+
+```
+[0, 1, 2, 3,
+ 0, 0, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0 ]
+```
+
+Clearly, Trubopfor writes more than 4 `u32`s.
 
 # Notes
 
