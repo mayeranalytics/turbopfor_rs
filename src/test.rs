@@ -114,21 +114,37 @@ fn mk_data_inc<T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord>(
 }
 
 
-/// Checks if data was written beyond `len`. returns true if ok
+/// Checks that no data was written beyond `len`, i.e. returns true if
+/// data[len], data[len+1], ... are all zero.
 fn check_no_overflow<T: Ord+Debug+Num>(data: &[T], len: usize) -> bool {
+    if len > data.len() { return true; }
+    if len == 0 || data.is_empty() { return false; }
     let mut i = data.len();
     while i > 0 {
         i -= 1;
         if data[i] != T::zero() { break; }
     }
-    if i > len {
-        println!("empty data starts at {}, {} after len (={})", i, i-len+1, len);
+    if i > len-1 {
+        println!("empty data starts at index {}, {} positions after len index={}", i, i-len+1, len-1);
         let m = std::cmp::min(len+128, data.len());
         println!("{:?}", &data[len..m]);
         false
     } else {
         true
     }
+}
+
+#[test]
+fn test_check_no_overflow()
+{
+    let input = [1u8, 2, 3, 0, 0];
+    assert!(check_no_overflow(&input, 0)==false);
+    assert!(check_no_overflow(&input, 1)==false);
+    assert!(check_no_overflow(&input, 2)==false);
+    assert!(check_no_overflow(&input, 3)==true);
+    assert!(check_no_overflow(&input, 4)==true);
+    assert!(check_no_overflow(&input, 5)==true);
+    assert!(check_no_overflow(&input, 6)==true);
 }
 
 fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
@@ -149,7 +165,7 @@ fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
     // repeat test
     for _ in 0..N_ITERATIONS {
         // make data
-        let len = rng.gen_range(1..max_test_len);   // length of randomly generated data
+        let len = rng.gen_range(1..max_test_len);   // length of randomly generated input data
         let mut input: Vec<T> = mk_data_inc(len, &mut rng, &data_type);
         while input.len() < max_test_len { input.push(T::zero()); }
         // encode
@@ -167,7 +183,36 @@ fn test_generic<W:Width, T: Num+Clone+std::ops::AddAssign+Hash+Eq+Ord+Debug>(
         assert_eq!(n_bytes_written, n_bytes_read);
         assert!(compare(&input, &decoded[..input.len()]));
         assert!(check_no_overflow(&decoded, len));
-
+        // Reset buffers
+        for i in 0..encoded.len() { encoded[i] = 0; }
+        for i in 0..decoded.len() { decoded[i] = T::zero(); }
+    }
+    
+    // test with tight allocations
+    for _ in 0..N_ITERATIONS/8 {
+        let len = rng.gen_range(1..max_test_len);   // length of randomly generated input data
+        let enc_size: usize = W::buf_size::<T>(len);
+        let dec_size: usize = len+32;
+        let mut encoded: Vec<u8> = vec![0; enc_size];
+        let mut decoded: Vec<T> = vec![T::zero(); dec_size];
+        // make data
+        let mut input: Vec<T> = mk_data_inc(len, &mut rng, &data_type);
+        while input.len() < len { input.push(T::zero()); }
+        // encode
+        let n_bytes_written = enc(
+            &input, 
+            &mut encoded
+        );
+        assert!(check_no_overflow(&encoded, n_bytes_written));
+        // decode
+        let n_bytes_read = dec(
+            &mut encoded,
+            input.len(),
+            &mut decoded
+        );
+        assert_eq!(n_bytes_written, n_bytes_read);
+        assert!(compare(&input, &decoded[..input.len()]));
+        assert!(check_no_overflow(&decoded, len));
         // Reset buffers
         for i in 0..encoded.len() { encoded[i] = 0; }
         for i in 0..decoded.len() { decoded[i] = T::zero(); }
