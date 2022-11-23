@@ -36,6 +36,13 @@ cargo test --release
 
 ## Usage
 
+First of all, add this line to the `[dependencies]` of your `Cargo.toml`:
+
+```toml
+turbopfor_rs = { git="https://github.com/mayeranalytics/turbopfor_rs", 
+                 version="0.3.3" }
+```
+
 The functions `enc`, `dec`, `denc`, `ddec`, etc. have different variants depending on the register width that is used.
 
 The phantom types associated with these widths are found in `turbopfor_rs::codec`:
@@ -59,7 +66,7 @@ fn main() {
     println!("input: {:?}", &input);
 
     /// allocate output buffer
-    let buflen: usize = W::buf_size::<u32>(input.len());
+    let buflen: usize = W::enc_buf_size::<u32>(input.len());
     let mut output = vec![0u8; buflen];
 
     // encode
@@ -67,12 +74,6 @@ fn main() {
 
     println!("encoded: {:?}", &output[..l]);
 }
-```
-
-Add this line to `Cargo.toml`:
-
-```toml
-turbopfor_rs = { git="https://github.com/mayeranalytics/turbopfor_rs", version="0.3.2" }
 ```
 
 You can also use the basic wrappers in [turbopfor_rs::p4](https://github.com/mayeranalytics/turbopfor_rs/blob/fbb279c20a883732b6b757a00f863a8537d4a098/src/lib.rs#L5) directly.
@@ -83,7 +84,27 @@ Decoding works the same way, but note that you have to provide the number `n` of
 fn dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 ```
 
-You must ensure that the input is long enough to support decoding of `n` integers. If the input buffer is too short you will get segfaults!
+#### Buffer sizes!
+
+You must ensure that the input is long enough to support decoding of `n` integers. If the input or output buffer is too short you will get segfaults!
+
+To determine the minimum safe buffer allocations you can use the two functions
+
+- `W::enc_buf_size::<T>(n)`
+
+- `W::dec_buf_len::<T>(n)`
+
+We are adhering to the naming convention that "size" refers to a number of *bytes*, whereas "len" refers to a number of *items* in an array of any type T.
+
+For example, this here not safe, the output buffer is too short:
+
+```rust
+let input = vec![1u32];
+let mut buf = [0u8; 64]; // large enough
+let enc_size = Codec::<W>::enc(&input, &mut buf);
+let mut output = vec![0u32]; // ! BAD. Output buffer too short!
+let dec_size = Codec::<W>::dec(&buf, 1, &mut output);    
+```
 
 # Notes
 
