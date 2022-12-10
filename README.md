@@ -130,21 +130,53 @@ Clearly, Trubopfor writes more than 4 `u32`s.
 
 ### Coverage
 
+|           | bindings | wrapper | tests |     |
+| --------- |:--------:| ------- | ----- | --- |
+| bitpack   | y        |         |       |     |
+| eliasfano | y        |         |       |     |
+| fp        | y        |         |       |     |
+| vint      | y        |         |       |     |
+| vp4       | y        |         |       |     |
+
 So far only the `vp4` functions are wrapped. The `fp` floating point codecs seem interesting, but the experiments with `icapp` (see below) show no benefit whatsoever. We are probably using the fp functions incorrectly.
 
-# The icapp utility
+# Turbpfor_rs internals
+
+## c_headers/
+
+The `TurboPFor` header files are placed in the `c_headers/` directory and manually sanitized (i.e. made fit for the *very* basic C parser used in `make.py`):
+
+- remove everything except for function decls and comments
+
+- replace `/* */` comments with `//` 
+
+- replace the `unsigned` type by `unsigned int`
+
+- remove pragmas such as `__restrict`
+
+- remove some unintelligible comments
+
+## make.py
+
+`make.py` generates Rust source code:
+
+- `python3 make.py ic` generates the the raw bindings found in `src/ic.rs`
+
+- `python3 make.py lib` generates the Rust wrapper in `src/lib.rs`
+
+# The useful icapp utility
 
 TurboPFor has a useful utlilty called `icapp`. It parses text (and binary?) files and performs compression and decompression using every available function. The main part of the output looks like this:
 
 ```asciidoc
   E MB/s     size     ratio     D MB/s function integer size=32 bits (lz=lz4,1) unsorted -1 
- 1781.21     647168  50.20%    8837.61   1:p4nenc32         TurboPFor            	
- 1836.46     647168  50.20%   26336.43   2:p4nenc128v32     TurboPForV           	
- 2239.92     645909  50.10%   28397.86   3:p4nenc256v32     TurboPFor256         	
-  920.97     729594  56.59%    3121.03   4:p4ndenc32        TurboPFor    delta   	
-  951.02     729594  56.59%    5308.80   5:p4ndenc128v32    TurboPForV   delta   	
- 1206.38     728054  56.47%    6623.52   6:p4ndenc256v32    TurboPFor256 delta   	
-  870.71     850501  65.97%    2929.67   7:p4nd1enc32       TurboPFor    delta1  	
+ 1781.21     647168  50.20%    8837.61   1:p4nenc32         TurboPFor                
+ 1836.46     647168  50.20%   26336.43   2:p4nenc128v32     TurboPForV               
+ 2239.92     645909  50.10%   28397.86   3:p4nenc256v32     TurboPFor256             
+  920.97     729594  56.59%    3121.03   4:p4ndenc32        TurboPFor    delta       
+  951.02     729594  56.59%    5308.80   5:p4ndenc128v32    TurboPForV   delta       
+ 1206.38     728054  56.47%    6623.52   6:p4ndenc256v32    TurboPFor256 delta       
+  870.71     850501  65.97%    2929.67   7:p4nd1enc32       TurboPFor    delta1      
 ...
 ```
 
@@ -166,7 +198,6 @@ file: delta max bits histogram:
 09: 0.1% 
 10: 0.0001% 
 17: 0.0001% 
-
 ```
 
 Caveat: The very compact, really strangely formatted, sparsely documented 2000 line source code [icapp.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/master/icapp.c) seems to be work in progress.
