@@ -3,6 +3,12 @@ name = "turbopfor_rs"
 version = "0.4.0"
 edition = "2021"
 authors = ["MM <mmayer@mayeranalytics.com>"]
+license = "GPL-2.0"
+description = "Wrapper for the turbopfor library"
+repository = "https://github.com/mayeranalytics/turbopfor_rs"
+readme = "README.md"
+keywords = ["encoding", "compress", "compression", "packing", "pfor", "turbopfor"]
+categories = ["api-bindings", "compression"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
