@@ -5,7 +5,7 @@
 # turbopfor\_rs
 
 This is a wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression).
-The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks. (Prepare for an abundance of superlatives in TorboPFor's readme...)
+The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks.
 
 [Michael Stapelberg](https://github.com/stapelberg/) performed an independent analysis: [TurboPFor: An analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/).
 
@@ -13,11 +13,10 @@ Please consider carefully the following
 
 #### Caveats
 
-- **Quality:** The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy. Note however that the tests pass consistently ***if*** the Zippenfenig patch is applied. 
 - **Critical buffer sizes:** Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may write beyond allocated memory resulting in segfaults. Likewise, when decoding, the input slice must be large enough to support decoding of the required number of integers, otherwise you get segfaults again.
-- **License:** Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
+- **License:** GPL v2.
 
-Because of these caveats we probably won't publish this crate on [crates.io](https://crates.io). Feedback regarding successes or failures with this library is very welcome!
+This crate will be published on [crates.io](https://crates.io) when more tests are available. Feedback regarding successes or failures with this library is very welcome!
 
 Tests were performed on Intel Intel Core i7 running Linux and MacOS.
 
