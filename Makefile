@@ -1,8 +1,7 @@
 vendor/turbopfor/libic.la:
 	mkdir -p vendor; \
-	git clone https://github.com/powturbo/TurboPFor-Integer-Compression.git vendor/turbopfor; \
+	git clone --depth 1 --branch 2023-04 https://github.com/powturbo/TurboPFor-Integer-Compression.git vendor/turbopfor; \
 	cd vendor/turbopfor; \
-	git apply ../../patch.diff; \
 	make -j;
 
 lib: src/lib.rs src/ic.rs

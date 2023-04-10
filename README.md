@@ -22,7 +22,7 @@ Tests were performed on Intel Intel Core i7 running Linux and MacOS.
 
 ## Acknowledgements
 
-A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) for sharing the the bugfix in [vp4c.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/90867ca1169b7af93d908ebefdb28f24cdce79da/vp4c.c). See [patch.diff](https://github.com/mayeranalytics/turbopfor_rs/blob/1aaf80a6bdcbdd81b0d7375e3fe451124d2c3d25/patch.diff#L1).
+A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) for sharing the the bugfix in [vp4c.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/90867ca1169b7af93d908ebefdb28f24cdce79da/vp4c.c), which is  [incorporated]([TurboPFor: TurboPFor encode · powturbo/TurboPFor-Integer-Compression@2104007 · GitHub](https://github.com/powturbo/TurboPFor-Integer-Compression/commit/21040077ffe3877096c58f41cf62ba715571c7c0)) in turbopfor, now.
 
 ## Installation
 
@@ -39,7 +39,7 @@ First of all, add this line to the `[dependencies]` of your `Cargo.toml`:
 
 ```toml
 turbopfor_rs = { git="https://github.com/mayeranalytics/turbopfor_rs", 
-                 version="0.3.3" }
+                 version="0.4" }
 ```
 
 The functions `enc`, `dec`, `denc`, `ddec`, etc. have different variants depending on the register width that is used.
