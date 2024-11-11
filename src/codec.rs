@@ -36,7 +36,7 @@ impl Width for W256v {
 }
 
 pub trait Codec<W:Width> where Self:Sized {
-    /// Turbopfor encoding for unsorted integer lists of type `T`
+    /// Turbopfor encoding for unsorted integer lists of type `Self`
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
     /// * `output` - `[u8]` containing the compressed output
@@ -53,7 +53,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of input bytes used
     fn dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 
-    /// Turbopfor delta encoding for increasing integer lists of type `T` (sorted w/ duplicate)
+    /// Turbopfor delta encoding for increasing integer lists of type `Self` (sorted w/ duplicate)
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
     /// * `output` - `[u8]` containing the compressed output
@@ -61,7 +61,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of output bytes used
     fn denc(input: &[Self], output: &mut [u8]) -> usize;
 
-    /// Turbopfor delta decoding into increasing integer lists of type `T` (sorted w/ duplicate)
+    /// Turbopfor delta decoding into increasing integer lists of type `Self` (sorted w/ duplicate)
     /// # Arguments
     /// * `input` - `&[u8]` containing the compressed input data
     /// * `n` - Length of decompressed data to be written to output
@@ -70,7 +70,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of input bytes used
     fn ddec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 
-    /// Turbopfor delta encoding for strictly increasing integer lists of type `T` (sorted unique)
+    /// Turbopfor delta encoding for strictly increasing integer lists of type `Self` (sorted unique)
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
     /// * `output` - `[u8]` containing the compressed output
@@ -78,7 +78,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of output bytes used
     fn d1enc(input: &[Self], output: &mut [u8]) -> usize;
 
-    /// Turbopfor delta decoding into strictly increasing integer lists of type `T` (sorted unique)
+    /// Turbopfor delta decoding into strictly increasing integer lists of type `Self` (sorted unique)
     /// # Arguments
     /// * `input` - `&[u8]` containing the compressed input data
     /// * `n` - Length of decompressed data to be written to output
@@ -87,7 +87,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of input bytes used
     fn d1dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 
-    /// Turbopfor dZigZag encoding for unsorted integer lists of type `T`
+    /// Turbopfor dZigZag encoding for unsorted integer lists of type `Self`
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
     /// * `output` - `[u8]` containing the compressed output
@@ -95,7 +95,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of output bytes used
     fn zenc(input: &[Self], output: &mut [u8]) -> usize;
 
-    /// Turbopfor ZigZag decoding for unsorted integer lists of type `T`
+    /// Turbopfor ZigZag decoding for unsorted integer lists of type `Self`
     /// # Arguments
     /// * `input` - `&[u8]` containing the compressed input data
     /// * `n` - Length of decompressed data to be written to output
