@@ -160,22 +160,22 @@ where
 }
 
 #[test]
-fn test_enc_dec_u8_normal() {
+fn test_enc_dec_u8_standard() {
     test_enc_dec_generic::<u8, StamdardEncoding<W, u8>, W>()
 }
 
 #[test]
-fn test_enc_dec_u16_normal() {
+fn test_enc_dec_u16_standard() {
     test_enc_dec_generic::<u16, StamdardEncoding<W, u16>, W>()
 }
 
 #[test]
-fn test_enc_dec_u32_normal() {
+fn test_enc_dec_u32_standard() {
     test_enc_dec_generic::<u32, StamdardEncoding<W, u32>, W>()
 }
 
 #[test]
-fn test_enc_dec_u64_normal() {
+fn test_enc_dec_u64_standard() {
     test_enc_dec_generic::<u64, StamdardEncoding<W, u64>, W>()
 }
 
