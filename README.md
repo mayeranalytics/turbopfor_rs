@@ -5,7 +5,7 @@
 # turbopfor\_rs
 
 This is a wrapper for [TurboPFor Integer Compression](https://github.com/powturbo/TurboPFor-Integer-Compression).
-The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks. (Prepare for an abundance of superlatives in TorboPFor's readme...)
+The authors claim it to be the "Fastest Integer Compression", and support their claim with their own suite of benchmarks.
 
 [Michael Stapelberg](https://github.com/stapelberg/) performed an independent analysis: [TurboPFor: An analysis (2019)](https://michael.stapelberg.ch/posts/2019-02-05-turbopfor-analysis/).
 
@@ -13,17 +13,16 @@ Please consider carefully the following
 
 #### Caveats
 
-- **Quality:** The [turbopfor](https://github.com/powturbo/TurboPFor-Integer-Compression) library appears to be abandoned, the authors do not respond anymore. The documentation is lacking, and the source code is buggy. Note however that the tests pass consistently ***if*** the Zippenfenig patch is applied. 
 - **Critical buffer sizes:** Write buffer of sufficient size must be allocated, otherwise turbopfor_rs may write beyond allocated memory resulting in segfaults. Likewise, when decoding, the input slice must be large enough to support decoding of the required number of integers, otherwise you get segfaults again.
-- **License:** Note that although the license file is missing the source code states that the TurboPFor license is GPL v2
+- **License:** GPL v2.
 
-Because of these caveats we probably won't publish this crate on [crates.io](https://crates.io). Feedback regarding successes or failures with this library is very welcome!
+This crate will be published on [crates.io](https://crates.io) when more tests are available. Feedback regarding successes or failures with this library is very welcome!
 
 Tests were performed on Intel Intel Core i7 running Linux and MacOS.
 
 ## Acknowledgements
 
-A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) for sharing the the bugfix in [vp4c.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/90867ca1169b7af93d908ebefdb28f24cdce79da/vp4c.c). See [patch.diff](https://github.com/mayeranalytics/turbopfor_rs/blob/1aaf80a6bdcbdd81b0d7375e3fe451124d2c3d25/patch.diff#L1).
+A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) for sharing the the bugfix in [vp4c.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/90867ca1169b7af93d908ebefdb28f24cdce79da/vp4c.c), which is  [incorporated](https://github.com/powturbo/TurboPFor-Integer-Compression/commit/21040077ffe3877096c58f41cf62ba715571c7c0) in turbopfor, now.
 
 ## Installation
 
@@ -40,7 +39,7 @@ First of all, add this line to the `[dependencies]` of your `Cargo.toml`:
 
 ```toml
 turbopfor_rs = { git="https://github.com/mayeranalytics/turbopfor_rs", 
-                 version="0.3.3" }
+                 version="0.4" }
 ```
 
 The functions `enc`, `dec`, `denc`, `ddec`, etc. have different variants depending on the register width that is used.
@@ -123,10 +122,92 @@ The `output` `Vec<u32>` is
 ```
 [0, 1, 2, 3,
  0, 0, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
- 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0 ]
+ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0]
 ```
 
 Clearly, Trubopfor writes more than 4 `u32`s.
+
+### Coverage
+
+|           | bindings | wrapper | tests |     |
+| --------- |:--------:| ------- | ----- | --- |
+| bitpack   | y        |         |       |     |
+| eliasfano | y        |         |       |     |
+| fp        | y        |         |       |     |
+| vint      | y        |         |       |     |
+| vp4       | y        |         |       |     |
+
+So far only the `vp4` functions are wrapped. The `fp` floating point codecs seem interesting, but the experiments with `icapp` (see below) show no benefit whatsoever. We are probably using the fp functions incorrectly.
+
+# Turbpfor_rs internals
+
+## c_headers/
+
+The `TurboPFor` header files are placed in the `c_headers/` directory and manually sanitized (i.e. made fit for the *very* basic C parser used in `make.py`):
+
+- remove everything except for function decls and comments
+
+- replace `/* */` comments with `//` 
+
+- replace the `unsigned` type by `unsigned int`
+
+- remove pragmas such as `__restrict`
+
+- remove some unintelligible comments
+
+## make.py
+
+`make.py` generates Rust source code:
+
+- `python3 make.py ic` generates the the raw bindings found in `src/ic.rs`
+
+- `python3 make.py lib` generates the Rust wrapper in `src/lib.rs`
+
+# The useful icapp utility
+
+TurboPFor has a useful utlilty called `icapp`. It parses text (and binary?) files and performs compression and decompression using every available function. The main part of the output looks like this:
+
+```asciidoc
+  E MB/s     size     ratio     D MB/s function integer size=32 bits (lz=lz4,1) unsorted -1 
+ 1781.21     647168  50.20%    8837.61   1:p4nenc32         TurboPFor                
+ 1836.46     647168  50.20%   26336.43   2:p4nenc128v32     TurboPForV               
+ 2239.92     645909  50.10%   28397.86   3:p4nenc256v32     TurboPFor256             
+  920.97     729594  56.59%    3121.03   4:p4ndenc32        TurboPFor    delta       
+  951.02     729594  56.59%    5308.80   5:p4ndenc128v32    TurboPForV   delta       
+ 1206.38     728054  56.47%    6623.52   6:p4ndenc256v32    TurboPFor256 delta       
+  870.71     850501  65.97%    2929.67   7:p4nd1enc32       TurboPFor    delta1      
+...
+```
+
+The utility also prints histrograms that show the distribution of "max bits" in the input. "Max bits" is the highest non-zero bit in the input value.
+
+```asciidoc
+file: max bits histogram:
+16:#################################################################################################### 100% 
+file: delta max bits histogram:
+00:############ 12% 
+01:### 3.2% 
+02:###### 6.4% 
+03:########### 11% 
+04:################# 17% 
+05:#################### 20% 
+06:######################## 24% 
+07:#### 4.4% 
+08:## 1.7% 
+09: 0.1% 
+10: 0.0001% 
+17: 0.0001% 
+```
+
+Caveat: The very compact, really strangely formatted, sparsely documented 2000 line source code [icapp.c](https://github.com/powturbo/TurboPFor-Integer-Compression/blob/master/icapp.c) seems to be work in progress.
+
+The caveat nonwithstanding, here are a few usage tips:
+
+- Turn on maximum verbosity `-v5` to see the  parse result of the first 100 values
+
+- Unless the `-f` flag is used (see below) the input is converted to integers. For example `./icapp -v5 -Ft.4 floats.txt` reads the text file `floats.txt` and transforms the input floats into integers by multiplying with 10000.
+
+- The `-f4` `-f8` flag switches on float mode. For example `./icapp -v5 -Ft.4 -f4 floats.txt` reads the text file `float.txt` as single floats with 4 decimals. 
 
 # Notes
 
