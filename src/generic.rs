@@ -1,28 +1,30 @@
 /// Generic functions
 use crate::codec::*;
+use crate::sample::*;
 use std::marker::PhantomData;
 use rand::{
     Rng,
     prelude::Distribution, 
     distributions::{uniform::SampleUniform, Standard}
 };
+use num_traits::Bounded;
 
 pub trait Encoding {
     type T;
     const ENC_TYPE: u8; // useful for identifying the encoding type in lookup tables, etc.
     fn encode<EW: Width>(input: &[Self::T], output: &mut [u8]) -> usize;
     fn decode<EW: Width>(input: &[u8], n: usize,  output: &mut [Self::T]) -> usize;
-    fn sample(len: usize) -> Vec<Self::T> where Self::T: Distribution<Self::T>;
+    fn sample(len: usize) -> Vec<Self::T>;
 }
 
-pub struct StandardEncoding<W, T>             { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
+pub struct StandardEncoding<W, T>           { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct IncreasingEncoding<W, T>         { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct StrictlyIncreasingEncoding<W, T> { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct ZigZagEncoding<W, T>             { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 
 // Implement the Encoding trait for each encoding type, linking to the right Codec methods
 impl<W: Width, T: Codec<W>> Encoding for StandardEncoding<W, T> 
-    where Standard: Distribution<T>
+    where Standard: Distribution<T>, T: Arithmetic
 {
     type T = T;
     const ENC_TYPE: u8 = 0; // Example encoding type constant
@@ -32,13 +34,11 @@ impl<W: Width, T: Codec<W>> Encoding for StandardEncoding<W, T>
     fn decode<EW: Width>(input: &[u8], n: usize, output: &mut [Self::T]) -> usize {
         T::dec(input, n, output)
     }
-    fn sample(len: usize) -> Vec<Self::T> where Self::T: Distribution<Self::T> {
-        (0..len).map(|_| rand::random()).collect()
-    }
-}
+    fn sample(len: usize) -> Vec<Self::T> { sample_standard(len) }
+} 
 
 impl<W: Width, T: Codec<W>> Encoding for IncreasingEncoding<W, T> 
-where Standard: Distribution<T>, T: Copy + std::ops::Add<Output=T> + SampleUniform + PartialOrd + From<u8>
+where Standard: Distribution<T>, T: Arithmetic
 {
     type T = T;
     const ENC_TYPE: u8 = 1;
@@ -49,26 +49,12 @@ where Standard: Distribution<T>, T: Copy + std::ops::Add<Output=T> + SampleUnifo
         T::ddec(input, n, output)
     }
     fn sample(len: usize) -> Vec<Self::T>
-        where Self::T: Distribution<Self::T> + Copy,
-    {
-        let mut rng = rand::thread_rng();
-        let mut result = Vec::with_capacity(len);
-        // Start with an initial random value
-        let mut current: T = rng.gen::<Self::T>();
-        result.push(current);
-        // Define a reasonable delta range to ensure values increase without overflow
-        for _ in 1..len {
-            // Generate a small delta to add to the current value
-            let delta: T = rng.gen_range(T::from(0u8)..=T::from(10u8)); // Delta range from 1 to 10
-            current = current + delta;
-            result.push(current);
-        }
-        result
-    }
+        where Standard: Distribution<T>, T: Arithmetic
+    { sample_increasing(len, 0, 10) }
 }
 
 impl<W: Width, T: Codec<W>> Encoding for StrictlyIncreasingEncoding<W, T> 
-    where Standard: Distribution<T>, T: Copy + std::ops::Add<Output=T> + SampleUniform + PartialOrd + From<u8>
+    where Standard: Distribution<T>, T: Arithmetic
 {
     type T = T;
     const ENC_TYPE: u8 = 2;
@@ -79,26 +65,12 @@ impl<W: Width, T: Codec<W>> Encoding for StrictlyIncreasingEncoding<W, T>
         T::d1dec(input, n, output)
     }
     fn sample(len: usize) -> Vec<Self::T>
-        where Self::T: Distribution<Self::T> + Copy,
-    {
-        let mut rng = rand::thread_rng();
-        let mut result = Vec::with_capacity(len);
-        // Start with an initial random value
-        let mut current: T = rng.gen::<Self::T>();
-        result.push(current);
-        // Define a reasonable delta range to ensure values increase without overflow
-        for _ in 1..len {
-            // Generate a small delta to add to the current value
-            let delta: T = rng.gen_range(T::from(1u8)..=T::from(10u8)); // Delta range from 1 to 10
-            current = current + delta;
-            result.push(current);
-        }
-        result
-    }
+        where Standard: Distribution<T>, T: Arithmetic
+    { sample_increasing(len, 1, 10) }
 }
 
 impl<W: Width, T: Codec<W>> Encoding for ZigZagEncoding<W, T> 
-    where Standard: Distribution<T>
+    where Standard: Distribution<T>, T: Arithmetic
 {
     type T = T;
     const ENC_TYPE: u8 = 3;
@@ -108,9 +80,7 @@ impl<W: Width, T: Codec<W>> Encoding for ZigZagEncoding<W, T>
     fn decode<EW: Width>(input: &[u8], n: usize, output: &mut [Self::T]) -> usize {
         T::zdec(input, n, output)
     }
-    fn sample(len: usize) -> Vec<Self::T> where Self::T: Distribution<Self::T> {
-        (0..len).map(|_| rand::random()).collect()
-    }
+    fn sample(len: usize) -> Vec<Self::T> { sample_standard(len) }
 }
 
 /// Generic encoding function
@@ -131,30 +101,23 @@ where
     T: Codec<WidthType>,
     T: Eq + Clone + core::fmt::Debug + Default,
     u8: Codec<WidthType>, u16: Codec<WidthType>, u32: Codec<WidthType>, u64: Codec<WidthType>,
-    Standard: Distribution<T>,
+    Standard: Distribution<T>, T: Arithmetic
 {
     let mut rng = rand::thread_rng();
     for _ in 0..256 {
         // Generate random input data
         let len = rng.gen_range(1..=16 * 1024);
-        let input: Vec<T> = (0..len).map(|_| rng.gen()).collect();
-
-        // Prepare output buffer for encoding
+        let input: Vec<T> = E::sample(len);
+        println!("Input: {:?}", input);
+        // Prepare input buffer and encode
         let mut buf = vec![0u8; WidthType::enc_buf_size::<T>(input.len())];
-
-        // Encode the data
         let size_enc = encode::<E, WidthType>(&input, &mut buf);
-
-        // Prepare output buffer for decoding
+        // Prepare output buffer and decode
         let mut output: Vec<T> = vec![T::default(); WidthType::dec_buf_len::<T>(input.len())];
-
-        // Decode the data
+        println!("Output: {:?}", output);
         let size_dec = decode::<E, WidthType>(&buf[..size_enc], input.len(), &mut output);
-
-        // Check that the encoded and decoded data sizes match
+        // Check results
         assert_eq!(size_enc, size_dec);
-
-        // Check that decoded output matches the original input
         assert_eq!(input, output[..input.len()]);
     }
 }

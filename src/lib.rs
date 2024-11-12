@@ -2,6 +2,7 @@
 pub mod ic; // the unsafe wrappers
 pub mod codec;
 pub mod generic;
+pub mod sample;
 
 pub mod p4 {
 
