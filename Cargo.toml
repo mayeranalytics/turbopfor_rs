@@ -16,6 +16,7 @@ categories = ["api-bindings", "compression"]
 libc = "0"
 rand = "0.8"
 generate-random = "0.1"
+num-traits = "0.2"
 
 [[bin]]
 name = "enclen"
