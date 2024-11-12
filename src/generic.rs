@@ -15,13 +15,13 @@ pub trait Encoding {
     fn sample(len: usize) -> Vec<Self::T> where Self::T: Distribution<Self::T>;
 }
 
-pub struct StamdardEncoding<W, T>             { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
+pub struct StandardEncoding<W, T>             { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct IncreasingEncoding<W, T>         { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct StrictlyIncreasingEncoding<W, T> { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 pub struct ZigZagEncoding<W, T>             { _marker_w: PhantomData<W>, _marker_t: PhantomData<T> }
 
 // Implement the Encoding trait for each encoding type, linking to the right Codec methods
-impl<W: Width, T: Codec<W>> Encoding for StamdardEncoding<W, T> 
+impl<W: Width, T: Codec<W>> Encoding for StandardEncoding<W, T> 
     where Standard: Distribution<T>
 {
     type T = T;
@@ -161,22 +161,22 @@ where
 
 #[test]
 fn test_enc_dec_u8_standard() {
-    test_enc_dec_generic::<u8, StamdardEncoding<W, u8>, W>()
+    test_enc_dec_generic::<u8, StandardEncoding<W, u8>, W>()
 }
 
 #[test]
 fn test_enc_dec_u16_standard() {
-    test_enc_dec_generic::<u16, StamdardEncoding<W, u16>, W>()
+    test_enc_dec_generic::<u16, StandardEncoding<W, u16>, W>()
 }
 
 #[test]
 fn test_enc_dec_u32_standard() {
-    test_enc_dec_generic::<u32, StamdardEncoding<W, u32>, W>()
+    test_enc_dec_generic::<u32, StandardEncoding<W, u32>, W>()
 }
 
 #[test]
 fn test_enc_dec_u64_standard() {
-    test_enc_dec_generic::<u64, StamdardEncoding<W, u64>, W>()
+    test_enc_dec_generic::<u64, StandardEncoding<W, u64>, W>()
 }
 
 #[test]
