@@ -3,11 +3,9 @@ use crate::codec::*;
 use crate::sample::*;
 use std::marker::PhantomData;
 use rand::{
-    Rng,
     prelude::Distribution, 
-    distributions::{uniform::SampleUniform, Standard}
+    distributions::Standard
 };
-use num_traits::Bounded;
 
 pub trait Encoding {
     type T;
@@ -92,6 +90,9 @@ pub fn encode<E: Encoding, W: Width>(input: &[E::T], output: &mut [u8]) -> usize
 pub fn decode<E: Encoding, W: Width>(input: &[u8], n: usize, output: &mut [E::T]) -> usize {
     E::decode::<W>(input, n, output)
 }
+
+#[cfg(test)]
+use rand::Rng;
 
 #[cfg(test)]
 fn test_enc_dec_generic<T, E, WidthType>()
