@@ -42,9 +42,16 @@ pub trait Encoding {
     fn sample(len: usize) -> Vec<Self::T>;
 }
 
+/// Unsorted integer lists (using codec::dec and enc)
 pub struct StandardEncoding<WT, T>           { _marker_w: PhantomData<WT>, _marker_t: PhantomData<T> }
+
+/// Increasing integer lists (using codec::ddec and denc)
 pub struct IncreasingEncoding<WT, T>         { _marker_w: PhantomData<WT>, _marker_t: PhantomData<T> }
+
+/// Strictly increasing integer lists (using codec::d1dec and d1enc)
 pub struct StrictlyIncreasingEncoding<WT, T> { _marker_w: PhantomData<WT>, _marker_t: PhantomData<T> }
+
+/// Unsorted integer lists (using codec::zdec and zenc)
 pub struct ZigZagEncoding<WT, T>             { _marker_w: PhantomData<WT>, _marker_t: PhantomData<T> }
 
 // Implement the Encoding trait for each encoding type, linking to the right Codec methods
