@@ -19,25 +19,10 @@
 use crate::codec::*;
 use crate::sample::*;
 use std::marker::PhantomData;
-use std::mem;
 use rand::{ // for testing
     prelude::Distribution, 
     distributions::Standard,
 };
-
-pub trait EncodingBase {
-    type W: Width;
-}
-
-pub struct StandardEncodingBase<WT>           { _wt: PhantomData<WT> }
-pub struct IncreasingEncodingBase<WT>         { _wt: PhantomData<WT> }
-pub struct StrictlyIncreasingEncodingBase<WT> { _wt: PhantomData<WT> }
-pub struct ZigZagEncodingBase<WT>             { _wt: PhantomData<WT> }
-
-impl<WT:Width> EncodingBase for StandardEncodingBase<WT> { type W = WT; }
-impl<WT:Width> EncodingBase for IncreasingEncodingBase<WT> { type W = WT; }
-impl<WT:Width> EncodingBase for StrictlyIncreasingEncodingBase<WT> { type W = WT; }
-impl<WT:Width> EncodingBase for ZigZagEncodingBase<WT> { type W = WT; }
 
 /// Trait for encoding types with width.
 pub trait Encoding {

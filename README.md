@@ -26,7 +26,7 @@ A big thansk to [Patrick Zippenfenig](https://github.com/patrick-zippenfenig) fo
 
 ## Installation
 
-Cargo should automaticall download, patch and build the turbopfor library.
+Cargo should automatically download, patch and build the turbopfor library.
 
 ```shell
 cargo build
@@ -119,13 +119,33 @@ println!("{:?}", output);
 
 The `output` `Vec<u32>` is
 
-```
+```rust
 [0, 1, 2, 3,
  0, 0, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0]
 ```
 
 Clearly, Trubopfor writes more than 4 `u32`s.
+
+### turbopfor_rs::generic
+
+v0.4.1 introduces `turbopfor_rs::generic` that reorganizes the encoders and decoders under a single trait `Encoding` that has four implementations:
+
+- `StandardEncoding` for unsorted integer lists (using codec::dec and enc)
+- `IncreasingEncoding` for increasing integer lists (using codec::ddec and denc)
+- `StrictlyIncreasingEncoding` for strictly increasing integer lists (using codec::d1dec and d1enc)
+- `ZigZagEncoding` for unsorted integer lists (using codec::zdec and zenc)
+
+```rust
+    let input: Vec<T> = vec![4, 83, 23, 214, 255, 0, 2];
+    let buf_len = StandardEncoding::<W, T>::enc_buf_size(input.len());
+    let mut buf = vec![0u8; 1024];
+    assert!(buf.len() >= buf_len);
+    let size = StandardEncoding::<W, T>::encode(&input, &mut buf);
+    println!("{}", size);
+```
+
+Having all functions under one trait facilitates generic programming. Otherwise there's nothing new, here.
 
 ### Coverage
 
@@ -263,7 +283,7 @@ Exceptions:
 
 Information about buffer sizes is scattered all over the place:
 
-- [Alignment and padding, Issue #59]([Alignment and tailing padding requirements for the decoder APIs · Issue #59 · powturbo/TurboPFor-Integer-Compression · GitHub](https://github.com/powturbo/TurboPFor-Integer-Compression/issues/59):
+- [Alignment and padding, Issue #59]([Alignment and tailing padding requirements for the decoder APIs · Issue #59 · powturbo/TurboPFor-Integer-Compression · GitHub](https://github.com/powturbo/TurboPFor-Integer-Compression/issues/59)):
   
   - Alignment for input and output is not required
   
