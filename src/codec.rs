@@ -87,7 +87,7 @@ pub trait Codec<W:Width> where Self:Sized {
     /// Number of input bytes used
     fn d1dec(input: &[u8], n: usize, output: &mut [Self]) -> usize;
 
-    /// Turbopfor dZigZag encoding for unsorted integer lists of type `Self`
+    /// Turbopfor ZigZag encoding for unsorted integer lists of type `Self`
     /// # Arguments
     /// * `input` - `&[T]` containing the uncompressed input
     /// * `output` - `[u8]` containing the compressed output
